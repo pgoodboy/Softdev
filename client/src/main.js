@@ -7,7 +7,10 @@ import BootstrapVue from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+import "chart.js";
+import "hchs-vue-charts";
 
+Vue.use(window.VueCharts);
 Vue.use(BootstrapVue)
 Vue.config.productionTip = false
 

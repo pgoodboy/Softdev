@@ -29,14 +29,13 @@
     <b-row align-v="end">
       <b-col cols="10"></b-col>
       <b-col cols="2">
-       <b-nav-item-dropdown left>
+        <b-nav-item-dropdown left>
           <!-- Using 'button-content' slot -->
           <template slot="button-content"><e>Select Farm</e></template>
-          <b-dropdown-item href="/">1</b-dropdown-item>
-          <b-dropdown-item href="/">2</b-dropdown-item>
-          <b-dropdown-item href="/">3</b-dropdown-item>
-          <b-dropdown-item href="/">4</b-dropdown-item>
-          <b-dropdown-item href="/">{{x}}</b-dropdown-item>
+          <b-dropdown-item href="/#/records/1">1</b-dropdown-item>
+          <b-dropdown-item href="/#/records/2">2</b-dropdown-item>
+          <b-dropdown-item href="/#/records/3">3</b-dropdown-item>
+          <b-dropdown-item href="/#/records/4">4</b-dropdown-item>
           
         </b-nav-item-dropdown>
         </b-col>
@@ -44,42 +43,113 @@
 
   </b-container>
   <b-container>
-    <b-row align-v="end">
+    <b-row align-v="start"> 
       <b-col> 
-        
-      <li v-for='record in records'>
-        {{record}}
-      </li>
-
+        {{senType[0]+' sensor'}}
+        <apexchart type=area height=350 :options="chartOptions" :series="series" />
+        {{senType[1] +' sensor'}}
+        <apexchart2 type=area height=350 :options="chartOptions1" :series="series1" />
       </b-col>
     </b-row>
   </b-container>
-   
+
 </div>
 </template>
 
 <script>
 import axios from 'axios'
+import VueApexCharts from 'vue-apexcharts'
+
 export default {
+  components: {
+        apexchart: VueApexCharts,
+        apexchart2: VueApexCharts,
+      },
     data(){
         return {
-            records: [],
+            senList: [],
+            senType: [],
+          series: [{
+            name: '',
+            data: []
+          }],
+          chartOptions: {
+            dataLabels: {
+              enabled: false
+            },
+            stroke: {
+              curve: 'smooth'
+            },
+            xaxis: {
+              type: 'datetime',
+              categories: [],
+            },
+            tooltip: {
+              x: {
+                format: 'dd/MM/yy'
+              },
+            }
+          },
+          series1: [{
+            name: '',
+            data: []
+          }],
+          chartOptions1: {
+            dataLabels: {
+              enabled: false
+            },
+            stroke: {
+              curve: 'smooth'
+            },
+            xaxis: {
+              type: 'datetime',
+              categories: [],
+            },
+            tooltip: {
+              x: {
+                format: 'dd/MM/yy'
+              },
+            }
+          }
         }
     },
-    mounted (){
-        axios .get('http://localhost:8081/records/1')
-              .then(res => (
-                this.records = res.data
-              ))
-        //this.loadRecords()
+    mounted (){  
+        axios.post('http://localhost:8000/sensors',{
+          farm_id: 1,
+          option: 'list'
+        })
+            .then(res => {
+              res.data.result.forEach(element => {
+              this.senList.push(element.sen_id)
+              this.senType.push(element.type)
+              });
+              axios.post('http://localhost:8000/sensor_logs',{
+                sen_id: this.senList[0],
+                option: 'list'
+              })
+                  .then(res => {
+                    res.data.result.forEach(element => {
+                    this.series[0].data.push(element.value)
+                    this.chartOptions.xaxis.categories.push(element.time)
+                    });
+                  })
+              axios.post('http://localhost:8000/sensor_logs',{
+                sen_id: this.senList[1],
+                option: 'list'
+              })
+                  .then(res => {
+                    res.data.result.forEach(element => {
+                    this.series1[0].data.push(element.value)
+                    this.chartOptions1.xaxis.categories.push(element.time)
+                    });
+                  })
+            });
+            
+        
     },
-    // methods: {
-    //     async loadRecords (){
-    //         const response = await RecordsAPI.getRecords ()
-    //         this.records = response.data
-    //     }
-    // }
 }
+
+
 </script>
 
 <style lang="css">
